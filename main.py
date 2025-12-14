@@ -116,4 +116,21 @@ class DataDictionary:
         )
         #print(df)
         return df
-    
+
+class dataset:
+    """
+        A dataset object to group the functionality and data of the reference material.
+    """    
+    def __init__(self,source:str):
+        self.source = source
+        self.data = pl.read_csv(source)
+    def preview(self,n:int=5) -> pl.DataFrame:
+        """ Previews the dataset.
+
+        Args:
+            n (int, optional): Number of rows to preview. Defaults to 5.
+
+        Returns:
+            pl.DataFrame: _description_
+        """        
+        return self.data.head(n)    
