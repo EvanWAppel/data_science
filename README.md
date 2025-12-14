@@ -17,12 +17,3 @@ Credit One Bank captures numerous data attributes from credit card applicants. T
 
 The data comprises a sample of approved applications, all attributes reflect the status of that applicant at the time of application. The goal is to minimize "delinquent_account" and optimize "active_account" using as simple a strategy as possible.
 
-### 1. Description and classification of data objects
-
-- Targets - Constraints
-- immutable features - can't do anything about these (identity)
-- actionable features - features that we can do something about (The Stuff)
-- Derived features - calculated in the table (leaky)
-
-### 2. Unify Success label
-
