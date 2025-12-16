@@ -372,230 +372,231 @@ class analyze:
                 print(f"{selected_feature_names[i]:45s}  {importances[i]:.6f}")
         else:
             print("\n Feature name mismatch")
-    def success_label(self) -> None:
-        """
-            Defines success label based on:
-            success = (active == True) & (delinquent == False)
-        """
-        self.data = self.data.with_columns(
-            (
-                (pl.col('active_account') == True) & (pl.col('delinquent_account') == False)
-            ).alias('success')
-        )
-    def remove_nans(self) -> None:
-        """ Removes NaN values from the dataset.
-        """        
-        self.data = self.data.drop_nans()
 
-class model:
-    def __init__(self):
-        self.dataset_class = Dataset()
-        self.data = self.dataset_class.data
-        self.dictionary_df = DataDictionary().frame_dictionary()
-    def linear_regression(self):
-        # Linear Regression
-        # y = success label
-        # X = actionable features
-        y:pl.DataFrame = (
-            self.data
-            .drop_nans() # prevents column mismatch due to NaNs
-            .select(pl.col('success'))
-        )
-        X:pl.DataFrame = (
-            self.data
-                .drop_nans() # prevents column mismatch due to NaNs
-                .select(
-                    self.dictionary_df
-                        .filter(pl.col('Classification') == 'actionable')
-                        .select(pl.col('Field'))
-                        .to_series()
-                        .to_list()
-                )
-                .drop_nans()
-        )
-        # Run the model
+#     def success_label(self) -> None:
+#         """
+#             Defines success label based on:
+#             success = (active == True) & (delinquent == False)
+#         """
+#         self.data = self.data.with_columns(
+#             (
+#                 (pl.col('active_account') == True) & (pl.col('delinquent_account') == False)
+#             ).alias('success')
+#         )
+#     def remove_nans(self) -> None:
+#         """ Removes NaN values from the dataset.
+#         """        
+#         self.data = self.data.drop_nans()
 
-        model = LinearRegression()
-        model.fit(X, y)
-        # observe results
-        coefficients:pl.Series = pl.Series(model.coef_) # model.coef_ is a list in a list
-        print(coefficients)
-        intercept:Any = model.intercept_ # model.intercept_ is a single value in a ndarray
-        print("Intercept:", intercept)
-        # coefficients = magnitude of the relationship for each feature
-        # intercept = sign, positive or negative effect
-        # so if the all the features are negative, and the intercept is positive, then...
-        print(model.predict(X))
-        # 0.0 - explains nothing
-        # 1.0 - perfect fit
-        # ~0.6–0.8 → acceptable
-        r_squared = model.score(X, y)
-        print("R-squared:", r_squared)
-        mse = mean_squared_error(y, model.predict(X))
-        print("Mean Squared Error:", mse)
-        # Train/ test split
-        X_train, X_test, y_train, y_test = train_test_split(
-            X, 
-            y, 
-            test_size=0.2, 
-            random_state=42 # Thank you, Douglas Adams
-        )
-        model = LinearRegression()
-        model.fit(X_train, y_train)
-        model.score(X_test, y_test)
-        X_sm = sm.add_constant(X)
-        model = sm.OLS(y, X_sm).fit()
-        print(model.summary())
-        pipeline = Pipeline([
-            ("scaler", StandardScaler()),
-            ("model", LinearRegression())
-        ])
-        pipeline.fit(X_train, y_train)
-    def logistic_regression(
-            self,
-            target:str = "success", # binary 0/1 # target == "y"
-            num_cols:List[str] = ["income", "dti_score","alt_risk_score_2"],
-            cat_cols:List[str] = ["seg_id"],
-            test_size:float=0.2, 
-            random_state:int=42, 
-            n_estimators:int=600,
-            learning_rate:float=0.05,
-            max_depth:int=4,
-            subsample:float=0.8,
-            colsample_bytree:float=0.8,
-            reg_lambda:float=1.0,
-            tree_method:str="hist",   # fast CPU training
-            eval_metric:str="logloss",
-    ):
-        # Logistic Regression is for when the target is binary
-        # Example cleanup (customize as needed)
-        df = (
-            self.data
-            .with_columns([
-                pl.col(target).cast(pl.Int64),
-                # optional: fill nulls
-                *[pl.col(c).fill_null(pl.median(c)) for c in num_cols],
-                *[pl.col(c).fill_null("UNKNOWN").cast(pl.Utf8) for c in cat_cols],
-            ])
-        )
+# class model:
+#     def __init__(self):
+#         self.dataset_class = Dataset()
+#         self.data = self.dataset_class.data
+#         self.dictionary_df = DataDictionary().frame_dictionary()
+#     def linear_regression(self):
+#         # Linear Regression
+#         # y = success label
+#         # X = actionable features
+#         y:pl.DataFrame = (
+#             self.data
+#             .drop_nans() # prevents column mismatch due to NaNs
+#             .select(pl.col('success'))
+#         )
+#         X:pl.DataFrame = (
+#             self.data
+#                 .drop_nans() # prevents column mismatch due to NaNs
+#                 .select(
+#                     self.dictionary_df
+#                         .filter(pl.col('Classification') == 'actionable')
+#                         .select(pl.col('Field'))
+#                         .to_series()
+#                         .to_list()
+#                 )
+#                 .drop_nans()
+#         )
+#         # Run the model
 
-        # Split in sklearn (keeps it simple)
-        X_pd = df.select(num_cols + cat_cols).to_pandas()
-        y_pd = df.select(target).to_pandas().iloc[:, 0]
+#         model = LinearRegression()
+#         model.fit(X, y)
+#         # observe results
+#         coefficients:pl.Series = pl.Series(model.coef_) # model.coef_ is a list in a list
+#         print(coefficients)
+#         intercept:Any = model.intercept_ # model.intercept_ is a single value in a ndarray
+#         print("Intercept:", intercept)
+#         # coefficients = magnitude of the relationship for each feature
+#         # intercept = sign, positive or negative effect
+#         # so if the all the features are negative, and the intercept is positive, then...
+#         print(model.predict(X))
+#         # 0.0 - explains nothing
+#         # 1.0 - perfect fit
+#         # ~0.6–0.8 → acceptable
+#         r_squared = model.score(X, y)
+#         print("R-squared:", r_squared)
+#         mse = mean_squared_error(y, model.predict(X))
+#         print("Mean Squared Error:", mse)
+#         # Train/ test split
+#         X_train, X_test, y_train, y_test = train_test_split(
+#             X, 
+#             y, 
+#             test_size=0.2, 
+#             random_state=42 # Thank you, Douglas Adams
+#         )
+#         model = LinearRegression()
+#         model.fit(X_train, y_train)
+#         model.score(X_test, y_test)
+#         X_sm = sm.add_constant(X)
+#         model = sm.OLS(y, X_sm).fit()
+#         print(model.summary())
+#         pipeline = Pipeline([
+#             ("scaler", StandardScaler()),
+#             ("model", LinearRegression())
+#         ])
+#         pipeline.fit(X_train, y_train)
+#     def logistic_regression(
+#             self,
+#             target:str = "success", # binary 0/1 # target == "y"
+#             num_cols:List[str] = ["income", "dti_score","alt_risk_score_2"],
+#             cat_cols:List[str] = ["seg_id"],
+#             test_size:float=0.2, 
+#             random_state:int=42, 
+#             n_estimators:int=600,
+#             learning_rate:float=0.05,
+#             max_depth:int=4,
+#             subsample:float=0.8,
+#             colsample_bytree:float=0.8,
+#             reg_lambda:float=1.0,
+#             tree_method:str="hist",   # fast CPU training
+#             eval_metric:str="logloss",
+#     ):
+#         # Logistic Regression is for when the target is binary
+#         # Example cleanup (customize as needed)
+#         df = (
+#             self.data
+#             .with_columns([
+#                 pl.col(target).cast(pl.Int64),
+#                 # optional: fill nulls
+#                 *[pl.col(c).fill_null(pl.median(c)) for c in num_cols],
+#                 *[pl.col(c).fill_null("UNKNOWN").cast(pl.Utf8) for c in cat_cols],
+#             ])
+#         )
 
-        X_train, X_test, y_train, y_test = train_test_split(
-            X_pd, y_pd, test_size=0.2, random_state=42, stratify=y_pd
-        )
+#         # Split in sklearn (keeps it simple)
+#         X_pd = df.select(num_cols + cat_cols).to_pandas()
+#         y_pd = df.select(target).to_pandas().iloc[:, 0]
 
-        # --- sklearn: preprocess + model ---
-        preprocess = ColumnTransformer(
-            transformers=[
-                ("num", StandardScaler(), num_cols),
-                ("cat", OneHotEncoder(handle_unknown="ignore"), cat_cols),
-            ],
-            remainder="drop",
-        )
+#         X_train, X_test, y_train, y_test = train_test_split(
+#             X_pd, y_pd, test_size=0.2, random_state=42, stratify=y_pd
+#         )
 
-        clf = Pipeline(steps=[
-            ("prep", preprocess),
-            ("model", LogisticRegression(
-                solver="lbfgs",      # good default
-                max_iter=2000,
-                n_jobs=None,         # ignored by lbfgs; used by some solvers
-                class_weight=None    # set to "balanced" if labels are imbalanced
-            )),
-        ])
+#         # --- sklearn: preprocess + model ---
+#         preprocess = ColumnTransformer(
+#             transformers=[
+#                 ("num", StandardScaler(), num_cols),
+#                 ("cat", OneHotEncoder(handle_unknown="ignore"), cat_cols),
+#             ],
+#             remainder="drop",
+#         )
 
-        clf.fit(X_train, y_train)
+#         clf = Pipeline(steps=[
+#             ("prep", preprocess),
+#             ("model", LogisticRegression(
+#                 solver="lbfgs",      # good default
+#                 max_iter=2000,
+#                 n_jobs=None,         # ignored by lbfgs; used by some solvers
+#                 class_weight=None    # set to "balanced" if labels are imbalanced
+#             )),
+#         ])
 
-        # --- Evaluate ---
-        proba = clf.predict_proba(X_test)[:, 1]
-        pred = (proba >= 0.5).astype(int)
+#         clf.fit(X_train, y_train)
 
-        print("ROC AUC:", roc_auc_score(y_test, proba))
-        print(classification_report(y_test, pred))
-    def gb_trees(
-            self,
-            target:str = "success", # binary 0/1 # target == "y"
-            num_cols:List[str] = ["income", "dti_score","alt_risk_score_2"],
-            cat_cols:List[str] = ["seg_id"],
-            test_size:float=0.2, 
-            random_state:int=42, 
-            n_estimators:int=600,
-            learning_rate:float=0.05,
-            max_depth:int=4,
-            subsample:float=0.8,
-            colsample_bytree:float=0.8,
-            reg_lambda:float=1.0,
-            tree_method:str="hist",   # fast CPU training
-            eval_metric:str="logloss",
-            ):
-        # Gradient Boosted Trees
+#         # --- Evaluate ---
+#         proba = clf.predict_proba(X_test)[:, 1]
+#         pred = (proba >= 0.5).astype(int)
+
+#         print("ROC AUC:", roc_auc_score(y_test, proba))
+#         print(classification_report(y_test, pred))
+#     def gb_trees(
+#             self,
+#             target:str = "success", # binary 0/1 # target == "y"
+#             num_cols:List[str] = ["income", "dti_score","alt_risk_score_2"],
+#             cat_cols:List[str] = ["seg_id"],
+#             test_size:float=0.2, 
+#             random_state:int=42, 
+#             n_estimators:int=600,
+#             learning_rate:float=0.05,
+#             max_depth:int=4,
+#             subsample:float=0.8,
+#             colsample_bytree:float=0.8,
+#             reg_lambda:float=1.0,
+#             tree_method:str="hist",   # fast CPU training
+#             eval_metric:str="logloss",
+#             ):
+#         # Gradient Boosted Trees
         
-        df = (
-            self.data
-            .with_columns([
-                pl.col(target).cast(pl.Int64),
-                *[pl.col(c).fill_null(pl.median(c)) for c in num_cols],
-                *[pl.col(c).fill_null("UNKNOWN").cast(pl.Utf8) for c in cat_cols],
-            ])
-        )
+#         df = (
+#             self.data
+#             .with_columns([
+#                 pl.col(target).cast(pl.Int64),
+#                 *[pl.col(c).fill_null(pl.median(c)) for c in num_cols],
+#                 *[pl.col(c).fill_null("UNKNOWN").cast(pl.Utf8) for c in cat_cols],
+#             ])
+#         )
 
-        # Convert to pandas for sklearn preprocessing
-        X = df.select(num_cols + cat_cols).to_pandas()
-        y = df.select(target).to_pandas().iloc[:, 0]
+#         # Convert to pandas for sklearn preprocessing
+#         X = df.select(num_cols + cat_cols).to_pandas()
+#         y = df.select(target).to_pandas().iloc[:, 0]
 
-        X_train, X_test, y_train, y_test = train_test_split(
-            X, 
-            y, 
-            test_size=test_size, 
-            random_state=random_state, 
-            stratify=y,
-        )
+#         X_train, X_test, y_train, y_test = train_test_split(
+#             X, 
+#             y, 
+#             test_size=test_size, 
+#             random_state=random_state, 
+#             stratify=y,
+#         )
 
-        preprocess = ColumnTransformer(
-            transformers=[
-                (
-                    "num", 
-                    "passthrough", 
-                    num_cols,
-                ),
-                (
-                    "cat", 
-                    OneHotEncoder(handle_unknown="ignore"), 
-                    cat_cols,
-                ),
-            ]
-        )
+#         preprocess = ColumnTransformer(
+#             transformers=[
+#                 (
+#                     "num", 
+#                     "passthrough", 
+#                     num_cols,
+#                 ),
+#                 (
+#                     "cat", 
+#                     OneHotEncoder(handle_unknown="ignore"), 
+#                     cat_cols,
+#                 ),
+#             ]
+#         )
 
-        model = XGBClassifier(
-            n_estimators=n_estimators,
-            learning_rate=learning_rate,
-            max_depth=max_depth,
-            subsample=subsample,
-            colsample_bytree=colsample_bytree,
-            reg_lambda=reg_lambda,
-            tree_method=tree_method,   # fast CPU training
-            eval_metric=eval_metric,
-            random_state=random_state,
-        )
+#         model = XGBClassifier(
+#             n_estimators=n_estimators,
+#             learning_rate=learning_rate,
+#             max_depth=max_depth,
+#             subsample=subsample,
+#             colsample_bytree=colsample_bytree,
+#             reg_lambda=reg_lambda,
+#             tree_method=tree_method,   # fast CPU training
+#             eval_metric=eval_metric,
+#             random_state=random_state,
+#         )
 
-        clf = Pipeline(steps=[
-                (
-                    "prep", 
-                    preprocess,
-                ),
-                (
-                    "model", 
-                    model,
-                ),
-            ]
-        )
+#         clf = Pipeline(steps=[
+#                 (
+#                     "prep", 
+#                     preprocess,
+#                 ),
+#                 (
+#                     "model", 
+#                     model,
+#                 ),
+#             ]
+#         )
 
-        clf.fit(X_train, y_train)
+#         clf.fit(X_train, y_train)
 
-        proba = clf.predict_proba(X_test)[:, 1]
-        pred = (proba >= 0.5).astype(int)
+#         proba = clf.predict_proba(X_test)[:, 1]
+#         pred = (proba >= 0.5).astype(int)
 
-        print("ROC AUC:", roc_auc_score(y_test, proba))
-        print(classification_report(y_test, pred))
+#         print("ROC AUC:", roc_auc_score(y_test, proba))
+#         print(classification_report(y_test, pred))
