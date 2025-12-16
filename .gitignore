@@ -1,6 +1,10 @@
 # So that GIT doesn't pick up windows open files.
 *~* 
 
+# Large data files
+C1B_OffUs_Attribute_Feature_Eng.xlsx
+run1.consumer_level.cleaned.csv
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
