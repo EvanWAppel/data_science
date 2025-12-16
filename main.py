@@ -1,32 +1,37 @@
 import os
 import sys
 import polars as pl
-from typing import List, Dict, Callable, Any
+from typing import List, Dict, Callable, Any, Optional, Tuple
 from dataclasses import dataclass
 import variables
 import logging
 logger = logging.getLogger(__name__)
 from sklearn.linear_model import LinearRegression, LogisticRegression
-from sklearn.metrics import mean_squared_error, roc_auc_score, classification_report
-from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error, roc_auc_score, classification_report, average_precision_score, classification_report, confusion_matrix
+from sklearn.model_selection import train_test_split, ParameterGrid
 import statsmodels.api as sm
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
 from sklearn.compose import ColumnTransformer
-from sklearn.preprocessing import OneHotEncoder
+from sklearn.preprocessing import OneHotEncoder, StandardScaler 
 from xgboost import XGBClassifier
 import pandas as pd
-from sklearn.pipeline import Pipeline 
 from sklearn.impute import SimpleImputer 
-from sklearn.compose import ColumnTransformer
-from typing import Optional, Tuple, Dict, List
-from sklearn.linear_model import LogisticRegression 
-from sklearn.model_selection import train_test_split  
 from sklearn.feature_selection import SelectFromModel 
-from sklearn.preprocessing import OneHotEncoder, StandardScaler 
-from sklearn.metrics import roc_auc_score, average_precision_score, classification_report, confusion_matrix
 import numpy as np
-from sklearn.model_selection import ParameterGrid
+from pprint import pprint
+from md2docx_python.src.md2docx_python import markdown_to_word
+
+def md_to_docx(markdown_file = "REPORT.md" ,word_file = "report.docx")
+
+    # Convert the Markdown file to a Word document
+    try:
+        markdown_to_word(markdown_file, word_file)
+        print(f"Successfully converted '{markdown_file}' to '{word_file}'")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+
 
 # Create data dictionary table object
 @dataclass
@@ -445,7 +450,7 @@ class analyze:
             if not best or objective > best["objective"]:
                 best = {"bounds": bounds, "score": score, "rows": rows, "cost": cost, "objective": objective}
 
-        print(best)
+        pprint(best)
 #     def success_label(self) -> None:
 #         """
 #             Defines success label based on:

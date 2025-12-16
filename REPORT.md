@@ -54,7 +54,29 @@ Therefore, the model suggests that for the dataset, days_from_registration, inco
 
 ## Hyperparameter Search
 
-A grid search was used to find optimal 
+A grid search was used to find optimal parameter ranges for the selected features. The process goes like this:
+
+1. It spins up another copy of the overall analysis setup so it can inspect the latest customer table, then prints a quick summary showing the lowest, highest, and typical values for a handful of key fields like income and risk scores (main.py (lines 388-399)).
+
+2. Based on those summaries it defines reasonable lower and upper guardrails for each field, along with a “cost” that represents how hard it is to widen the allowed range for that field (main.py (lines 401-414)).
+
+3. The method then builds lots of plausible combinations of these guardrails by sampling a few representative points (like quarter-percentiles) along each feature’s distribution, so it doesn’t have to brute-force every possible number (main.py (lines 419-427)).
+
+4. For each combination it filters the data to whoever fits inside those bounds, measures how successful that filtered group tends to be and how many customers remain, and subtracts a small penalty if the bounds are too wide (reflecting the change costs) (main.py (lines 428-445)).
+
+5. Finally, it remembers the combination with the best trade-off—high success rate, decent coverage, and not too permissive—and prints that “best recipe” so you can see which thresholds work well together (main.py (lines 437-448)).
+
+This process provided a set of parameter ranges that the model suggests will optimize for the preferred outcome. 
 
 ## Conclusions and Caveats
 
+The model suggests that by preferring the following ranges for these features, we can optimize for the preferred outcome of active and not delinquent accounts.
+| Feature | Minimum | Maximum |
+| --- | --- | --- |
+| days_from_registration | 2692.0 | 3584.25 |
+| income | 31200.0 | 40300.0 |
+| alt_risk_score | 493.0 | 515.0 |
+| alt_risk_score_2 | 527.0 | 559.0 |
+| asset_score | 39.0 | 105.0 |
+
+## Future imprvements
