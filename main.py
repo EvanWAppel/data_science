@@ -15,6 +15,18 @@ from sklearn.pipeline import Pipeline
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder
 from xgboost import XGBClassifier
+import pandas as pd
+from sklearn.pipeline import Pipeline 
+from sklearn.impute import SimpleImputer 
+from sklearn.compose import ColumnTransformer
+from typing import Optional, Tuple, Dict, List
+from sklearn.linear_model import LogisticRegression 
+from sklearn.model_selection import train_test_split  
+from sklearn.feature_selection import SelectFromModel 
+from sklearn.preprocessing import OneHotEncoder, StandardScaler 
+from sklearn.metrics import roc_auc_score, average_precision_score, classification_report, confusion_matrix
+import numpy as np
+from sklearn.model_selection import ParameterGrid
 
 # Create data dictionary table object
 @dataclass
@@ -235,7 +247,7 @@ class analyze:
         data["success"] = (data['active_account']==True) & (data['delinquent_account']==False)
         payload:pd.DataFrame = data.drop(columns=['active_account','delinquent_account'])
         return payload
-    def model(self):
+    def feature_selection(self):
         y:pd.Series = self.data[self.target_col] 
         X:pd.DataFrame = self.data.drop(columns=self.exclude_col+[self.target_col])
 
@@ -372,7 +384,68 @@ class analyze:
                 print(f"{selected_feature_names[i]:45s}  {importances[i]:.6f}")
         else:
             print("\n Feature name mismatch")
+    def grid_search(self):
+        analysis:analyze = analyze(run_feature_importance_model=False)
+        # Gonna take a look at the max/min on these features to help set constraints
+        important_stats = analysis.data[
+            [
+                "days_from_registration",
+                "income",
+                "alt_risk_score",
+                "alt_risk_score_2",
+                "asset_score",
+            ]
+        ].describe()
+        print(important_stats)
+        constraints:Dict[str,List[float]] = {
+            "days_from_registration":[1,5916],
+            "income":[20_000,100_000],
+            "alt_risk_score":[408,702],
+            "alt_risk_score_2":[391,687],
+            "asset_score":[1,9_003],
+        }
 
+        change_cost:Dict[str,float|int] = {
+            "days_from_registration":1,
+            "income":1,
+            "alt_risk_score":1,
+            "alt_risk_score_2":1,
+            "asset_score":1,
+        }
+
+        data:pd.DataFrame = self.data
+        df = analysis.data.copy()  # pandas DataFrame from the analyze class
+
+        quantiles = [0.05, 0.25, 0.5, 0.75, 0.95]
+        grid_dict = {}
+        for feature, (lo, hi) in constraints.items():
+            series = df[feature].dropna()
+            lowers = np.clip(np.quantile(series, quantiles[:3]), lo, hi)
+            uppers = np.clip(np.quantile(series, quantiles[2:]), lo, hi)
+            grid_dict[f"{feature}__min"] = lowers
+            grid_dict[f"{feature}__max"] = uppers
+
+        def evaluate(bounds):
+            mask = np.ones(len(df), dtype=bool)
+            for col, (lo, hi) in bounds.items():
+                mask &= df[col].between(lo, hi)
+            subset = df.loc[mask]
+            if subset.empty:
+                return 0.0, 0
+            return subset["success"].mean(), len(subset)
+
+        best = None
+        for params in ParameterGrid(grid_dict):
+            bounds = {f: (params[f"{f}__min"], params[f"{f}__max"]) for f in constraints}
+            if any(lo >= hi for lo, hi in bounds.values()):
+                continue
+            score, rows = evaluate(bounds)
+            cost = sum(change_cost[f] * (bounds[f][1] - bounds[f][0]) for f in bounds)
+            objective = score - 1e-4 * cost  # tune the penalty factor
+            if not best or objective > best["objective"]:
+                best = {"bounds": bounds, "score": score, "rows": rows, "cost": cost, "objective": objective}
+
+        print(best)
 #     def success_label(self) -> None:
 #         """
 #             Defines success label based on:
