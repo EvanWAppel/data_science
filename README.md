@@ -27,7 +27,15 @@ The data comprises a sample of approved applications, all attributes reflect the
 
 # Questions
 
-- why choose lightgb instead of a different model? What other options are there?
-- I used grid search to choose hyperparameters, what other kinds of hyperparameter search exists?
-- What are some caveats to the methodology I used here?
-- How long has feature selection been used in real world applications?
+- ~why choose lightgb instead of a different model? What other options are there?~
+- ~I used grid search to choose hyperparameters, what other kinds of hyperparameter search exists?~
+- ~What are some caveats to the methodology I used here?~
+- ~How long has feature selection been used in real world applications?~
+- ~what does "tree ensemble" mean?~
+- ~what do you mean by "linear"~
+- ~I'm still struggling with the meaning of this word "counterfactual"~
+- What is "L1 regularization (LASSO)"
+- What is "Tree-based feature importance"
+- What is "SHAP-based pruning"
+- What is "Feature ablation tests"
+- 

@@ -80,13 +80,19 @@ The model suggests that by preferring the following ranges for these features, w
 | alt_risk_score_2 | 527.0 | 559.0 |
 | asset_score | 39.0 | 105.0 |
 
-!!! caveats !!!
+The biggest caveat to this analysis is that it does not suggest causality. Additionally, it was prepared without a great deal of modification of the various inputs. A true optimization would require a great deal of agonizing over every single input, the methods used to produce the analysis, and the very nature of the base dataset. 
+
+This analysis is in no way "the answer", rather it is a starting point for a lengthy and potentially arduous analysis. 
 
 ## Future improvements
 
 Owing to time-constraints, I half-implemented several features because the instructions were to generate suggestions, not to write an application for testing and comparing various machine learning models. However, the code is riddled with nascent ideas for future implementations. The following are some of those ideas.
 
 - Full parameterization of the analyze class (the class that manages the model's creation). This would allow for any details about how the model should be built to be passed into the class at the time of instantiation. This would allow for automated sequential runs to compare different strategies, models, machine learning modes, et cetera.
-- Streamlit application. I think that it would be an interesting exercise to set up the model in such a way that analysts can use a streamlit application GUI to tool around with a variety of models and settings and be able to see the result in a variety of visualizations. 
+- Streamlit application. I think that it would be an interesting exercise to set up the model in such a way that analysts can use a streamlit application GUI to tool around with a variety of models, parameters, and settings and be able to see the result in a variety of visualizations. 
 - Database Caching. Something interesting that could be done here is to store previous runs of the modeler so that if someone unknowingly runs the same modeler parameters, it will bypass the modeler and simply display the results, significantly speeding up the process.
+- Scaling. It's obvious that the provided dataset is a well-cleaned subset of what is likely a huge and ever expanding dataset. I think that designing the modeler to handle arbitrarily large quantities of data based on a variety of strategies from users would be an interesting challenge.
+- Unit Testing. It might take some time, but it would be advantageous to design unit testing around a sample dataset. That way, it would make the application quite stable as features are added. 
+- Optimization. It's obvious that the field of Data Science is enormous and continuously advancing. There are a million decisions to make across many different code libraries and it's hard for one human being to be able to make all those decisions, but if we can turn a machine on the pata-parameters (I will be disappointed if I am not the one who coined this term) then maybe we can get even more efficient, more accurate.
+- Documentation. There's quite a lot of explanation that has to go into the decisions made during the optimization process and I think that it would be advantageous to design a searchable and detailed system for documentation, perhaps a wiki-like system. I recently learned of a documentation system called Dendron that I think might be a suitable candidate, but it would need significant effort to implement and train people in its use. Maybe a simple wiki will do at first.
 - 
