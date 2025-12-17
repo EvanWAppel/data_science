@@ -71,6 +71,7 @@ This process provided a set of parameter ranges that the model suggests will opt
 ## Conclusions and Caveats
 
 The model suggests that by preferring the following ranges for these features, we can optimize for the preferred outcome of active and not delinquent accounts.
+
 | Feature | Minimum | Maximum |
 | --- | --- | --- |
 | days_from_registration | 2692.0 | 3584.25 |
@@ -79,4 +80,13 @@ The model suggests that by preferring the following ranges for these features, w
 | alt_risk_score_2 | 527.0 | 559.0 |
 | asset_score | 39.0 | 105.0 |
 
-## Future imprvements
+!!! caveats !!!
+
+## Future improvements
+
+Owing to time-constraints, I half-implemented several features because the instructions were to generate suggestions, not to write an application for testing and comparing various machine learning models. However, the code is riddled with nascent ideas for future implementations. The following are some of those ideas.
+
+- Full parameterization of the analyze class (the class that manages the model's creation). This would allow for any details about how the model should be built to be passed into the class at the time of instantiation. This would allow for automated sequential runs to compare different strategies, models, machine learning modes, et cetera.
+- Streamlit application. I think that it would be an interesting exercise to set up the model in such a way that analysts can use a streamlit application GUI to tool around with a variety of models and settings and be able to see the result in a variety of visualizations. 
+- Database Caching. Something interesting that could be done here is to store previous runs of the modeler so that if someone unknowingly runs the same modeler parameters, it will bypass the modeler and simply display the results, significantly speeding up the process.
+- 
